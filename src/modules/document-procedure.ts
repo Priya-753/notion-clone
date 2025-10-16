@@ -69,14 +69,45 @@ export const documentRouter = createTRPCRouter({
             isPublished: z.boolean().optional(),
         }))
         .mutation(async ({ input, ctx }) => {
-            const { id, ...updateData } = input;
+            const { id, coverImage, ...updateData } = input;
+            
+            // If coverImage is being updated, handle cleanup
+            if (coverImage !== undefined) {
+                // Get current document to check for old cover image
+                const currentDocument = await prisma.document.findUnique({
+                    where: { id, userId: ctx.auth.userId },
+                    select: { coverImage: true }
+                });
+
+                if (currentDocument?.coverImage && currentDocument.coverImage !== coverImage) {
+                    // If removing cover image (empty string) or changing it, delete old file
+                    if (coverImage === "" || currentDocument.coverImage !== coverImage) {
+                        try {
+                            // Extract filename from URL and delete the file
+                            const oldUrl = currentDocument.coverImage;
+                            if (oldUrl.includes('/uploads/')) {
+                                const filename = oldUrl.split('/uploads/')[1];
+                                const fs = require('fs');
+                                const path = require('path');
+                                const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+                                
+                                if (fs.existsSync(filePath)) {
+                                    fs.unlinkSync(filePath);
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error deleting old cover image file:', error);
+                        }
+                    }
+                }
+            }
             
             const document = await prisma.document.update({
                 where: {
                     id,
                     userId: ctx.auth.userId,
                 },
-                data: updateData,
+                data: { ...updateData, coverImage },
             });
             return document;
         }),
@@ -140,12 +171,68 @@ export const documentRouter = createTRPCRouter({
             id: z.string().min(1, { message: "Document ID is required" }),
         }))
         .mutation(async ({ input, ctx }) => {
+            // Get document and all its images for cleanup
+            const document = await prisma.document.findUnique({
+                where: {
+                    id: input.id,
+                    userId: ctx.auth.userId,
+                },
+                select: { 
+                    coverImage: true,
+                    images: {
+                        select: { url: true }
+                    }
+                }
+            });
+
+            if (!document) {
+                throw new Error("Document not found or access denied");
+            }
+
+            // Delete the document (this will cascade delete images due to onDelete: Cascade)
             await prisma.document.delete({
                 where: {
                     id: input.id,
                     userId: ctx.auth.userId,
                 },
             });
+
+            // Clean up cover image file
+            if (document.coverImage) {
+                try {
+                    if (document.coverImage.includes('/uploads/')) {
+                        const filename = document.coverImage.split('/uploads/')[1];
+                        const fs = require('fs');
+                        const path = require('path');
+                        const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+                        
+                        if (fs.existsSync(filePath)) {
+                            fs.unlinkSync(filePath);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error deleting cover image file:', error);
+                }
+            }
+
+            // Clean up all inline image files
+            for (const image of document.images) {
+                try {
+                    if (image.url.includes('/uploads/')) {
+                        const filename = image.url.split('/uploads/')[1];
+                        const fs = require('fs');
+                        const path = require('path');
+                        const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+                        
+                        if (fs.existsSync(filePath)) {
+                            fs.unlinkSync(filePath);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error deleting image file:', error);
+                }
+            }
+
             return { success: true };
         }),
 
@@ -262,5 +349,135 @@ export const documentRouter = createTRPCRouter({
                 },
             });
             return documents;
+        }),
+
+    // Get document images
+    getImages: protectedProcedure
+        .input(z.object({
+            documentId: z.string().min(1, { message: "Document ID is required" }),
+        }))
+        .query(async ({ input, ctx }) => {
+            const images = await prisma.documentImage.findMany({
+                where: {
+                    documentId: input.documentId,
+                    document: {
+                        userId: ctx.auth.userId,
+                    },
+                },
+                orderBy: {
+                    createdAt: 'asc',
+                },
+            });
+            return images;
+        }),
+
+    // Add image to document
+    addImage: protectedProcedure
+        .input(z.object({
+            documentId: z.string().min(1, { message: "Document ID is required" }),
+            url: z.string().url({ message: "Valid URL is required" }),
+            alt: z.string().optional(),
+            caption: z.string().optional(),
+            width: z.number().optional(),
+            height: z.number().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+            // Verify document ownership
+            const document = await prisma.document.findFirst({
+                where: {
+                    id: input.documentId,
+                    userId: ctx.auth.userId,
+                },
+            });
+
+            if (!document) {
+                throw new Error("Document not found or access denied");
+            }
+
+            const image = await prisma.documentImage.create({
+                data: {
+                    documentId: input.documentId,
+                    url: input.url,
+                    alt: input.alt,
+                    caption: input.caption,
+                    width: input.width,
+                    height: input.height,
+                },
+            });
+
+            return image;
+        }),
+
+    // Update image
+    updateImage: protectedProcedure
+        .input(z.object({
+            id: z.string().min(1, { message: "Image ID is required" }),
+            alt: z.string().optional(),
+            caption: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+            const { id, ...updateData } = input;
+
+            const image = await prisma.documentImage.update({
+                where: {
+                    id,
+                    document: {
+                        userId: ctx.auth.userId,
+                    },
+                },
+                data: updateData,
+            });
+
+            return image;
+        }),
+
+    // Delete image
+    deleteImage: protectedProcedure
+        .input(z.object({
+            id: z.string().min(1, { message: "Image ID is required" }),
+        }))
+        .mutation(async ({ input, ctx }) => {
+            // Get the image first to get the URL for file cleanup
+            const image = await prisma.documentImage.findUnique({
+                where: {
+                    id: input.id,
+                    document: {
+                        userId: ctx.auth.userId,
+                    },
+                },
+                select: { url: true }
+            });
+
+            if (!image) {
+                throw new Error("Image not found or access denied");
+            }
+
+            // Delete the database record
+            await prisma.documentImage.delete({
+                where: {
+                    id: input.id,
+                    document: {
+                        userId: ctx.auth.userId,
+                    },
+                },
+            });
+
+            // Clean up the file
+            try {
+                if (image.url.includes('/uploads/')) {
+                    const filename = image.url.split('/uploads/')[1];
+                    const fs = require('fs');
+                    const path = require('path');
+                    const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
+                    
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting image file:', error);
+            }
+
+            return { success: true };
         }),
 });

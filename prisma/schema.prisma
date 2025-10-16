@@ -30,7 +30,27 @@ model Document {
   // Self-referencing relationship for nested documents
   parent         Document? @relation("DocumentHierarchy", fields: [parentDocument], references: [id])
   children       Document[] @relation("DocumentHierarchy")
+  
+  // Images associated with this document
+  images         DocumentImage[]
 
   @@index([userId])
   @@index([userId, parentDocument])
+}
+
+model DocumentImage {
+  id         String   @id @default(cuid())
+  documentId String
+  url        String
+  alt        String?
+  caption    String?
+  width      Int?
+  height     Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationship to document
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
 }

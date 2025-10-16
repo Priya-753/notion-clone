@@ -1,16 +1,16 @@
 import { ChevronsLeft, MenuIcon, PlusCircleIcon, PlusIcon, SearchIcon, SettingsIcon, TrashIcon } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
-import { Navbar } from "@/app/(home)/_components/navbar";
+import { Navbar } from "./navbar";
 import { UserItem } from "./user-item";
 import { useTRPC } from "@/trpc/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useClerk } from "@clerk/nextjs";
 import { Suspense } from "react";
 import Item from "./item";
-import { DocumentList } from "./documentlist";
+import { DocumentList } from "./document-list";
 import { useCreateDocument } from "@/hooks/use-create-document";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import TrashList from "./trash-list";
@@ -23,6 +23,7 @@ export const Navigation = () => {
 
     const trpc = useTRPC();
     const { user } = useClerk();
+    const params = useParams();
     const queryClient = useQueryClient();
 
     const { data: documents = [] } = useQuery({
@@ -175,6 +176,12 @@ export const Navigation = () => {
     <div ref={navbarRef} className={cn("absolute top-0 left-60 z-[99999] w-[calc(100%-240px)]",
          isResetting && "transition-all duration-300 ease-in-out",
          isMobile && "left-0 w-full")}>
+            {!!params.documentId && (
+                <Navbar
+                    isCollapsed={isCollapsed}
+                    onResetSidebar={resetSidebar}
+                />
+            )}
             <nav className="bg-transparent px-3 py-2 w-full">
                 {isCollapsed && <MenuIcon onClick={() => resetSidebar()} role="button" className="h-6 w-6 text-muted-foreground" />}
                 </nav>

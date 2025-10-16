@@ -70,13 +70,14 @@ const Item = ({ onClick, label, icon: Icon, id, documentIcon, isActive, isExpand
     const ChevronIcon = isExpanded ? ChevronDown : ChevronRight;
     return (
         <div className={cn("group min-h-[27px] text-sm py-1.5 pr-2 text-muted-foreground flex items-center hover:bg-primary/5", 
-        isActive && "bg-primary/5 text-primary-foreground",
+        isActive && "bg-primary/5 text-primary dark:text-primary-foreground",
         isSearch && "justify-center pl-0")} 
         onClick={onClick} role="button"
         style={{ paddingLeft: level ? `${level * 12 + 12}px` : "12px" }}>
             {!!id && (
                 <div className="h-full rounded-sm hover:bg-neutral-300 dark:hover:bg-neutral-600 mr-1" role="button" onClick={handleExpand} >
-                    <ChevronIcon className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                    <ChevronIcon className={cn("h-4 w-4 text-muted-foreground/50 shrink-0", 
+                    isActive && "text-primary dark:text-primary-foreground")} />
                 </div>
             )}
             {documentIcon ? (
@@ -85,7 +86,8 @@ const Item = ({ onClick, label, icon: Icon, id, documentIcon, isActive, isExpand
                 </div>
                 ) : (
                 <Icon
-                    className="shrink-0 h-[18px] mr-2 text-muted-foreground"
+                    className={cn("shrink-0 h-[18px] w-[18px] mr-2 text-muted-foreground", 
+                    isActive && "text-primary dark:text-primary-foreground")}
                 />
                 )}
             <span className="truncate">{label}</span>
@@ -105,7 +107,7 @@ const Item = ({ onClick, label, icon: Icon, id, documentIcon, isActive, isExpand
                         <DropdownMenuContent align="start" side="right" className="w-60" forceMount>
                             <DropdownMenuItem onClick={handleArchive} disabled={archiveDocument.isPending}>
                                 <TrashIcon className="size-4 mr-2" />
-                                {archiveDocument.isPending ? 'Archiving...' : 'Delete'}
+                                {archiveDocument.isPending ? 'Deleting...' : 'Delete'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <div className="text-xs text-muted-foreground p-2">

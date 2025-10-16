@@ -191,7 +191,7 @@ const TrashList = () => {
         return (
             <>
                 <div className={cn("group min-h-[27px] text-sm py-1.5 pr-2 text-muted-foreground flex items-center hover:bg-primary/5", 
-                    params.documentId === document.id && "bg-primary/5 text-primary-foreground",
+                    params.documentId === document.id && "bg-primary/5 text-foreground",
                     isSearchMatch && "bg-yellow-50 dark:bg-yellow-900/20")} 
                     onClick={() => onClick(document.id)} 
                     role="button"
@@ -264,15 +264,22 @@ const TrashList = () => {
                 </div>
             </div>
                 {hierarchicalDocuments.length > 0 && (
-                    <div className="flex items-center justify-between p-2 mt-2 mb-2 text-sm font-medium">
-                    <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={handleDeleteAll}
-                        disabled={deleteAllDocuments.isPending}
-                    >
-                        {deleteAllDocuments.isPending ? 'Deleting...' : 'Delete All'}
-                    </Button>
+                    <div className="px-3 py-2 border-b border-border/50">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                {hierarchicalDocuments.length} document{hierarchicalDocuments.length !== 1 ? 's' : ''} in trash
+                            </div>
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                onClick={handleDeleteAll}
+                                disabled={deleteAllDocuments.isPending}
+                                className="h-8 px-3 text-xs font-medium"
+                            >
+                                <TrashIcon className="h-3 w-3 mr-1" />
+                                {deleteAllDocuments.isPending ? 'Deleting...' : 'Delete All'}
+                            </Button>
+                        </div>
                     </div>
                 )}
             

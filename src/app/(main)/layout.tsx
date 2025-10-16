@@ -6,6 +6,7 @@ import { Navigation } from "./_components/navigation";
 import { usePathname } from "next/navigation";
 import { SearchCommand } from "@/components/search-command";
 import { SettingsDialog } from "@/components/settings-dialog";
+import { CoverImageModal } from "@/components/cover-image-modal";
 import { useEffect } from "react";
 import { useSearch } from "@/hooks/use-search";
 import { useSettings } from "@/hooks/use-settings";
@@ -53,6 +54,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             </main>
             <SearchCommand />
             <SettingsDialog />
+            <CoverImageModal />
         </div>
     );
 };
