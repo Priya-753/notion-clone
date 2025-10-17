@@ -30,8 +30,6 @@ export const useUpdateDocument = (options: UpdateDocumentOptions = {} as UpdateD
 
     const updateDocument = useMutation(trpc.document.update.mutationOptions({
         onSuccess: (data) => {
-            toast.success("Document updated!");
-            
             // Invalidate relevant queries to refresh the UI
             queryClient.invalidateQueries({
                 queryKey: trpc.document.getMany.queryKey()

@@ -120,3 +120,193 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Notion-like Editor Styles */
+.notion-editor {
+  @apply bg-white dark:bg-gray-800;
+}
+
+.notion-editor .ProseMirror {
+  @apply outline-none h-full p-4;
+}
+
+.notion-editor .ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-gray-400 dark:text-gray-500 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
+}
+
+.notion-editor .ProseMirror h1 {
+  @apply text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 mt-6;
+}
+
+.notion-editor .ProseMirror h2 {
+  @apply text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 mt-5;
+}
+
+.notion-editor .ProseMirror h3 {
+  @apply text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 mt-4;
+}
+
+.notion-editor .ProseMirror h4 {
+  @apply text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 mt-3;
+}
+
+.notion-editor .ProseMirror h5 {
+  @apply text-base font-bold text-gray-900 dark:text-gray-100 mb-2 mt-3;
+}
+
+.notion-editor .ProseMirror h6 {
+  @apply text-sm font-bold text-gray-900 dark:text-gray-100 mb-2 mt-3;
+}
+
+.notion-editor .ProseMirror p {
+  @apply text-gray-800 dark:text-gray-200 mb-2 leading-relaxed;
+}
+
+.notion-editor .ProseMirror ul {
+  @apply list-disc list-inside mb-4 ml-4;
+}
+
+.notion-editor .ProseMirror ol {
+  @apply list-decimal list-inside mb-4 ml-4;
+}
+
+.notion-editor .ProseMirror li {
+  @apply text-gray-800 dark:text-gray-200 mb-1;
+}
+
+.notion-editor .ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-4 italic text-gray-700 dark:text-gray-300;
+}
+
+.notion-editor .ProseMirror code {
+  @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-1 py-0.5 rounded text-sm font-mono;
+}
+
+.notion-editor .ProseMirror pre {
+  @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-4 rounded-lg overflow-x-auto my-4;
+}
+
+.notion-editor .ProseMirror pre code {
+  @apply bg-transparent p-0 text-sm;
+}
+
+.notion-editor .ProseMirror hr {
+  @apply border-t border-gray-300 dark:border-gray-600 my-6;
+}
+
+.notion-editor .ProseMirror table {
+  @apply border-collapse table-auto w-full my-4;
+}
+
+.notion-editor .ProseMirror th {
+  @apply border border-gray-300 dark:border-gray-600 px-3 py-2 bg-gray-50 dark:bg-gray-700 font-semibold text-left;
+}
+
+.notion-editor .ProseMirror td {
+  @apply border border-gray-300 dark:border-gray-600 px-3 py-2;
+}
+
+.notion-editor .ProseMirror img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+
+.notion-editor .ProseMirror a {
+  @apply text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline;
+}
+
+.notion-editor .ProseMirror mark {
+  @apply bg-yellow-200 dark:bg-yellow-800 px-1 rounded;
+}
+
+.notion-editor .ProseMirror strong {
+  @apply font-bold;
+}
+
+.notion-editor .ProseMirror em {
+  @apply italic;
+}
+
+.notion-editor .ProseMirror s {
+  @apply line-through;
+}
+
+.notion-editor .ProseMirror u {
+  @apply underline;
+}
+
+/* Task list styles */
+.notion-editor .ProseMirror ul[data-type="taskList"] {
+  @apply list-none ml-0;
+}
+
+.notion-editor .ProseMirror ul[data-type="taskList"] li {
+  @apply flex items-start mb-2;
+}
+
+.notion-editor .ProseMirror ul[data-type="taskList"] li > label {
+  @apply flex-shrink-0 mr-2 mt-1;
+}
+
+.notion-editor .ProseMirror ul[data-type="taskList"] li > div {
+  @apply flex-1;
+}
+
+.notion-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+  @apply w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600;
+}
+
+/* Focus styles */
+.notion-editor .ProseMirror:focus {
+  @apply outline-none;
+}
+
+/* Selection styles */
+.notion-editor .ProseMirror ::selection {
+  @apply bg-blue-100 dark:bg-blue-900;
+}
+
+/* Drop cursor */
+.notion-editor .ProseMirror .ProseMirror-dropcursor {
+  @apply relative;
+}
+
+.notion-editor .ProseMirror .ProseMirror-dropcursor:after {
+  @apply absolute left-0 right-0 top-0 h-0.5 bg-blue-500;
+  content: '';
+}
+
+/* Gap cursor */
+.notion-editor .ProseMirror .ProseMirror-gapcursor:after {
+  @apply absolute left-0 top-0 w-0 h-0 border-l-4 border-l-blue-500 border-t-4 border-t-transparent border-b-4 border-b-transparent;
+  content: '';
+}
+
+/* Bubble menu styles */
+.notion-editor .tiptap-bubble-menu {
+  @apply flex items-center gap-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg;
+}
+
+/* Toolbar button active states */
+.notion-editor .toolbar-button-active {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .notion-editor .ProseMirror {
+    @apply p-3;
+  }
+  
+  .notion-editor .ProseMirror h1 {
+    @apply text-2xl;
+  }
+  
+  .notion-editor .ProseMirror h2 {
+    @apply text-xl;
+  }
+  
+  .notion-editor .ProseMirror h3 {
+    @apply text-lg;
+  }
+}

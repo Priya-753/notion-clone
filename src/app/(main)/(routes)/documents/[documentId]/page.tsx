@@ -5,12 +5,13 @@ import { useTRPC } from "@/trpc/client";
 import { useParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Toolbar } from "@/components/toolbar";
 import { ImageDisplay } from "@/components/image-display";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useUpdateDocument } from "@/hooks/use-update-document";
 import { useCoverImage } from "@/hooks/use-cover-image";
 import { Cover } from "@/components/cover";
+import NotionEditor from "@/components/editor";
+import { useState, useEffect, useCallback } from "react";
 
 const DocumentIdPage = () => {
     const trpc = useTRPC();
@@ -20,6 +21,9 @@ const DocumentIdPage = () => {
         id: params.documentId as string,
     });
     const { onOpen: onOpenCoverImage } = useCoverImage();
+    
+    // Content state
+    const [content, setContent] = useState('');
 
     const { data: document, isLoading } = useQuery({
         ...trpc.document.getById.queryOptions({
@@ -28,6 +32,18 @@ const DocumentIdPage = () => {
     });
 
     const { data: images = [] } = getDocumentImages() || { data: [] };
+
+    // Initialize content when document loads
+    useEffect(() => {
+        if (document?.content) {
+            setContent(document.content);
+        }
+    }, [document?.content]);
+
+    // Handle content changes
+    const handleContentChange = useCallback((newContent: string) => {
+        setContent(newContent);
+    }, []);
 
     if (isLoading) {
         return (
@@ -58,54 +74,21 @@ const DocumentIdPage = () => {
     }
 
     return (
-        <div className="h-full">
+        <div className="h-full flex flex-col relative">
             {/* Cover Image - Full width at the very top */}
             <Cover url={document.coverImage || undefined} />
-            
-            {/* Title appears right below cover */}
-            <div className="sm:max-w-3xl lg:max-w-4xl mx-auto">
-                <Toolbar initialData={document} />
-            </div>
-            
-            <div className="pb-40">
-                <div className="p-6">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="prose dark:prose-invert max-w-none">
-                            {document.content ? (
-                                <div 
-                                    className="whitespace-pre-wrap"
-                                    dangerouslySetInnerHTML={{ __html: document.content }}
-                                />
-                            ) : (
-                                <div className="text-muted-foreground italic">
-                                    Start writing your document...
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Display uploaded images */}
-                        {images.length > 0 && (
-                            <div className="mt-8 space-y-6">
-                                <h3 className="text-lg font-semibold">Images</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {images.map((image: any) => (
-                                        <ImageDisplay
-                                            key={image.id}
-                                            src={image.url}
-                                            alt={image.alt || undefined}
-                                            caption={image.caption || undefined}
-                                            width={image.width || undefined}
-                                            height={image.height || undefined}
-                                            editable={true}
-                                            onRemove={() => deleteImage(image.id)}
-                                            className="w-full"
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                        
+            {/* Main Editor Content - Takes up the rest of the space */}
+            <div className="flex-1 min-h-0">
+                <NotionEditor 
+                    content={content}
+                    placeholder="Start writing your document..."
+                    className="h-full"
+                    documentId={document.id}
+                    onContentChange={handleContentChange}
+                    document={document}
+                    onUpdateDocument={updateDocument}
+                />
             </div>
         </div>
     );
