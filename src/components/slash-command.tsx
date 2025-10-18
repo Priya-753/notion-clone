@@ -17,9 +17,14 @@ import {
   Code,
   FileText,
   Hash,
-  Type
+  Type,
+  Smile,
+  Calculator,
+  Play
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useInlineImage } from '@/hooks/use-inline-image'
+import { useEmojiPicker } from '@/hooks/use-emoji-picker'
 
 interface SlashCommandProps {
   editor: Editor
@@ -38,6 +43,8 @@ interface CommandItem {
 const SlashCommand = ({ editor, range, query, onClose }: SlashCommandProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
+  const { onOpen: onOpenInlineImage } = useInlineImage()
+  const { onOpen: onOpenEmojiPicker } = useEmojiPicker()
 
   const commands: CommandItem[] = [
     {
@@ -144,19 +151,67 @@ const SlashCommand = ({ editor, range, query, onClose }: SlashCommandProps) => {
       description: 'Upload or embed an image',
       icon: <ImageIcon className="h-4 w-4" />,
       command: () => {
-        const url = window.prompt('Enter image URL:')
+        editor.chain().focus().deleteRange(range).run()
+        onOpenInlineImage(editor)
+        onClose()
+      }
+    },
+    {
+      title: 'Emoji',
+      description: 'Insert an emoji',
+      icon: <Smile className="h-4 w-4" />,
+      command: () => {
+        editor.chain().focus().deleteRange(range).run()
+        onOpenEmojiPicker(editor)
+        onClose()
+      }
+    },
+    {
+      title: 'Inline Math',
+      description: 'Insert an inline math equation',
+      icon: <Calculator className="h-4 w-4" />,
+      command: () => {
+        editor.chain().focus().deleteRange(range).insertInlineMath({ latex: '' }).run()
+        onClose()
+      }
+    },
+    {
+      title: 'Block Math',
+      description: 'Insert a block math equation',
+      icon: <Calculator className="h-4 w-4" />,
+      command: () => {
+        editor.chain().focus().deleteRange(range).insertBlockMath({ latex: '' }).run()
+        onClose()
+      }
+    },
+    {
+      title: 'YouTube',
+      description: 'Embed a YouTube video',
+      icon: <Play className="h-4 w-4" />,
+      command: () => {
+        const url = window.prompt('Enter YouTube URL:')
+        editor.chain().focus().deleteRange(range).run()
         if (url) {
-          editor.chain().focus().deleteRange(range).setImage({ src: url }).run()
+          // @ts-ignore - YouTube extension command
+          editor.chain().focus().setYoutubeVideo({ src: url }).run()
         }
         onClose()
       }
     }
   ]
 
-  const filteredCommands = commands.filter(command => 
-    command.title.toLowerCase().includes(query.toLowerCase()) ||
-    command.description.toLowerCase().includes(query.toLowerCase())
-  )
+  const filteredCommands = query === '' 
+    ? commands 
+    : commands.filter(command => 
+        command.title.toLowerCase().includes(query.toLowerCase()) ||
+        command.description.toLowerCase().includes(query.toLowerCase())
+      )
+
+  // Debug logging
+  console.log('SlashCommand - Query:', query)
+  console.log('SlashCommand - All commands:', commands.length)
+  console.log('SlashCommand - Filtered commands:', filteredCommands.length)
+  console.log('SlashCommand - Commands:', filteredCommands.map(c => c.title))
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -192,7 +247,10 @@ const SlashCommand = ({ editor, range, query, onClose }: SlashCommandProps) => {
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
         <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-2">
-          No commands found
+          No commands found for "{query}"
+        </div>
+        <div className="text-xs text-gray-400 px-3 py-1">
+          Available commands: {commands.map(c => c.title).join(', ')}
         </div>
       </div>
     )

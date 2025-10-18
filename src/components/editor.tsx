@@ -19,8 +19,8 @@ import { ListItem } from '@tiptap/extension-list-item'
 import { Blockquote } from '@tiptap/extension-blockquote'
 import { Heading } from '@tiptap/extension-heading'
 import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
-import { Image } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
+import { ImageNode } from './image-node'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
@@ -32,7 +32,12 @@ import { FontFamily } from '@tiptap/extension-font-family'
 import { FontSize } from '@tiptap/extension-font-size'
 import { Dropcursor } from '@tiptap/extension-dropcursor'
 import { Gapcursor } from '@tiptap/extension-gapcursor'
+import { InlineMath, BlockMath } from './math-nodes'
+import Emoji from '@tiptap/extension-emoji'
+import { emojiSuggestion } from './emoji-suggestion'
 import { createLowlight } from 'lowlight'
+import Youtube from '@tiptap/extension-youtube'
+import 'katex/dist/katex.min.css'
 import { Button } from './ui/button'
 import { 
   Bold, 
@@ -57,14 +62,20 @@ import {
   AlignRight,
   AlignJustify,
   Palette,
-  Highlighter
+  Highlighter,
+  Smile,
+  Calculator,
+  Play
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { IconPicker } from './icon-picker'
 import { useCoverImage } from '@/hooks/use-cover-image'
 import { useImageUpload } from '@/hooks/use-image-upload'
-import { Smile, X } from 'lucide-react'
+import { useInlineImage } from '@/hooks/use-inline-image'
+import { InlineImageModal } from './inline-image-modal'
+import { EmojiPickerPopover } from './emoji-picker-popover'
+import { EmojiPickerModal } from './emoji-picker-modal'
 
 interface NotionEditorProps {
   content?: string
@@ -99,6 +110,7 @@ const NotionEditor = ({
   // Integrated hooks
   const { onOpen: onOpenCoverImage } = useCoverImage()
   const { uploadImage, addImageToDocument } = useImageUpload()
+  const { onOpen: onOpenInlineImage } = useInlineImage()
 
 
   const editor = useEditor({
@@ -143,11 +155,7 @@ const NotionEditor = ({
         levels: [1, 2, 3, 4, 5, 6],
       }),
       HorizontalRule,
-      Image.configure({
-        HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg',
-        },
-      }),
+      ImageNode,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -171,6 +179,19 @@ const NotionEditor = ({
       FontSize,
       Dropcursor,
       Gapcursor,
+      InlineMath,
+      BlockMath,
+      Emoji.configure({
+        enableEmoticons: true,
+        suggestion: emojiSuggestion,
+      }),
+      Youtube.configure({
+        width: 640,
+        height: 480,
+        controls: true,
+        nocookie: true,
+        allowFullscreen: true,
+      }),
     ],
     content: content || (document?.title ? `<h1>${document.title}</h1><p></p>` : '<h1>Untitled</h1><p></p>'),
     editable,
@@ -218,6 +239,7 @@ const NotionEditor = ({
       
       // Check if we're at the start of a line with a slash
       if (textBeforeCursor === '/' && $from.parentOffset === 1) {
+        console.log('Slash detected at start of line')
         if (!showSlashCommand) {
           setShowSlashCommand(true)
           setSlashCommandRange({
@@ -227,6 +249,7 @@ const NotionEditor = ({
           setSlashCommandQuery('')
         }
       } else if (textBeforeCursor.startsWith('/') && textBeforeCursor.length > 1) {
+        console.log('Slash command query:', textBeforeCursor)
         if (!showSlashCommand) {
           setShowSlashCommand(true)
           setSlashCommandRange({
@@ -237,42 +260,28 @@ const NotionEditor = ({
         const query = textBeforeCursor.substring(1)
         setSlashCommandQuery(query)
       } else if (showSlashCommand && !textBeforeCursor.startsWith('/')) {
+        console.log('Hiding slash command')
         setShowSlashCommand(false)
+      }
+      
+      // Also check for slash at any position (more flexible)
+      if (textBeforeCursor.endsWith('/') && !showSlashCommand) {
+        console.log('Slash detected anywhere in text')
+        setShowSlashCommand(true)
+        setSlashCommandRange({
+          from: $from.pos - 1,
+          to: $from.pos
+        })
+        setSlashCommandQuery('')
       }
     },
     immediatelyRender: false,
   })
 
   const addImage = () => {
-    // Create a file input element
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    input.onchange = async (e: Event) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        try {
-          // Use the existing upload system
-          const formData = new FormData()
-          formData.append('file', file)
-          
-          const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-          })
-          
-          if (response.ok) {
-            const result = await response.json()
-            editor?.chain().focus().setImage({ src: result.url }).run()
-          } else {
-            console.error('Upload failed')
-          }
-        } catch (error) {
-          console.error('Upload error:', error)
-        }
-      }
+    if (editor) {
+      onOpenInlineImage(editor)
     }
-    input.click()
   }
 
   // Integrated functionality
@@ -325,6 +334,26 @@ const NotionEditor = ({
     editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
   }
 
+  const insertEmoji = (emoji: string) => {
+    editor?.chain().focus().insertContent(emoji).run()
+  }
+
+  const insertInlineMath = () => {
+    editor?.chain().focus().insertInlineMath({ latex: '' }).run()
+  }
+
+  const insertBlockMath = () => {
+    editor?.chain().focus().insertBlockMath({ latex: '' }).run()
+  }
+
+  const insertYoutube = () => {
+    const url = window.prompt('Enter YouTube URL:')
+    if (url) {
+      // @ts-ignore - YouTube extension command
+      editor?.chain().focus().setYoutubeVideo({ src: url }).run()
+    }
+  }
+
   const closeSlashCommand = () => {
     setShowSlashCommand(false)
     setSlashCommandRange(null)
@@ -337,7 +366,8 @@ const NotionEditor = ({
 
   return (
     <div className={cn("notion-editor h-full flex flex-col", className)}>
-      
+      <InlineImageModal />
+      <EmojiPickerModal />
 
       {/* Main Editor Content */}
       <div className="flex-1 prose prose-lg dark:prose-invert max-w-none focus:outline-none relative overflow-auto">
@@ -466,6 +496,18 @@ const NotionEditor = ({
         <Button
           variant="ghost"
           size="sm"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          className={cn(
+            "h-8 w-8 p-0",
+            editor.isActive('codeBlock') && "bg-gray-100 dark:bg-gray-700"
+          )}
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className="h-8 w-8 p-0"
         >
@@ -490,6 +532,35 @@ const NotionEditor = ({
           className="h-8 w-8 p-0"
         >
           <TableIcon className="h-4 w-4" />
+        </Button>
+        
+        <EmojiPickerPopover onEmojiSelect={insertEmoji}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+          >
+            <Smile className="h-4 w-4" />
+          </Button>
+        </EmojiPickerPopover>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertInlineMath}
+          className="h-8 w-8 p-0"
+          title="Insert inline math"
+        >
+          <Calculator className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertYoutube}
+          className="h-8 w-8 p-0"
+        >
+          <Play className="h-4 w-4" />
         </Button>
         
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
