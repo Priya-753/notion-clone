@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, ChevronsDownIcon, ChevronsUpIcon, EllipsisIcon, LucideIcon, MoreHorizontalIcon, MoveDownIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { ChevronDown, ChevronRight, LucideIcon, MoreHorizontalIcon, PlusIcon, TrashIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useCreateDocument } from "@/hooks/use-create-document";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useClerk } from "@clerk/nextjs";

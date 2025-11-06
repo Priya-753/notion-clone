@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { InlineImage } from "./inline-image";
-import { ImageIcon, Type, Bold, Italic, List, Quote } from "lucide-react";
+import { ImageIcon, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RichTextEditorProps {

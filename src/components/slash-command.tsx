@@ -15,12 +15,11 @@ import {
   Table as TableIcon,
   CheckSquare,
   Code,
-  FileText,
-  Hash,
   Type,
   Smile,
   Calculator,
-  Play
+  Play,
+  Globe
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useInlineImage } from '@/hooks/use-inline-image'
@@ -28,7 +27,7 @@ import { useEmojiPicker } from '@/hooks/use-emoji-picker'
 
 interface SlashCommandProps {
   editor: Editor
-  range: any
+  range: { from: number; to: number }
   query: string
   onClose: () => void
 }
@@ -192,8 +191,52 @@ const SlashCommand = ({ editor, range, query, onClose }: SlashCommandProps) => {
         const url = window.prompt('Enter YouTube URL:')
         editor.chain().focus().deleteRange(range).run()
         if (url) {
-          // @ts-ignore - YouTube extension command
+          // YouTube extension command - may not be available in all editor configurations
+          // @ts-ignore
           editor.chain().focus().setYoutubeVideo({ src: url }).run()
+        }
+        onClose()
+      }
+    },
+    {
+      title: 'Parse URL',
+      description: 'Parse content from a URL',
+      icon: <Globe className="h-4 w-4" />,
+      command: async () => {
+        const url = window.prompt('Enter URL to parse:')
+        editor.chain().focus().deleteRange(range).run()
+        if (url) {
+          try {
+            console.log('Parsing URL:', url)
+            
+            // Call our API route instead of using the parser directly
+            const response = await fetch('/api/parse-url', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ url }),
+            })
+            
+            const data = await response.json()
+            
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to parse URL')
+            }
+            
+            const result = data.data
+            console.log('Parser result:', result)
+            
+            // Insert the parsed content into the editor
+            if (result.content) {
+              editor.chain().focus().insertContent(`<h2>Parsed from: ${url}</h2><div>${result.content}</div>`).run()
+            } else {
+              editor.chain().focus().insertContent(`<p>No content found for: ${url}</p>`).run()
+            }
+          } catch (error) {
+            console.error('Parser error:', error)
+            editor.chain().focus().insertContent(`<p>Error parsing URL: ${url}</p>`).run()
+          }
         }
         onClose()
       }
@@ -247,7 +290,7 @@ const SlashCommand = ({ editor, range, query, onClose }: SlashCommandProps) => {
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2">
         <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-2">
-          No commands found for "{query}"
+          No commands found for &quot;{query}&quot;
         </div>
         <div className="text-xs text-gray-400 px-3 py-1">
           Available commands: {commands.map(c => c.title).join(', ')}

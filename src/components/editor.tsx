@@ -65,9 +65,10 @@ import {
   Highlighter,
   Smile,
   Calculator,
-  Play
+  Play,
+  Globe
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { IconPicker } from './icon-picker'
 import { useCoverImage } from '@/hooks/use-cover-image'
@@ -278,6 +279,15 @@ const NotionEditor = ({
     immediatelyRender: false,
   })
 
+  // Update editor content when the content prop changes (e.g., when loading from database)
+  useEffect(() => {
+    if (editor && content && editor.getHTML() !== content) {
+      // Only update if the content is actually different to avoid cursor jumps
+      // emitUpdate: false prevents triggering onChange during initial load
+      editor.commands.setContent(content, { emitUpdate: false })
+    }
+  }, [editor, content])
+
   const addImage = () => {
     if (editor) {
       onOpenInlineImage(editor)
@@ -351,6 +361,43 @@ const NotionEditor = ({
     if (url) {
       // @ts-ignore - YouTube extension command
       editor?.chain().focus().setYoutubeVideo({ src: url }).run()
+    }
+  }
+
+  const testParser = async () => {
+    const url = window.prompt('Enter URL to parse:')
+    if (url) {
+      try {
+        console.log('Parsing URL:', url)
+        
+        // Call our API route instead of using the parser directly
+        const response = await fetch('/api/parse-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+        })
+        
+        const data = await response.json()
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to parse URL')
+        }
+        
+        const result = data.data
+        console.log('Parser result:', result)
+        
+        // Insert the parsed content into the editor
+        if (result.content) {
+          editor?.chain().focus().insertContent(`<h2>Parsed from: ${url}</h2><div>${result.content}</div>`).run()
+        } else {
+          editor?.chain().focus().insertContent(`<p>No content found for: ${url}</p>`).run()
+        }
+      } catch (error) {
+        console.error('Parser error:', error)
+        editor?.chain().focus().insertContent(`<p>Error parsing URL: ${url}</p>`).run()
+      }
     }
   }
 
@@ -561,6 +608,16 @@ const NotionEditor = ({
           className="h-8 w-8 p-0"
         >
           <Play className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={testParser}
+          className="h-8 w-8 p-0"
+          title="Parse URL content"
+        >
+          <Globe className="h-4 w-4" />
         </Button>
         
         <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />

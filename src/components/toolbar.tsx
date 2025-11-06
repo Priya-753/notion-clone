@@ -1,6 +1,5 @@
 "use client";
 
-import { Title } from "@/app/(main)/_components/title";
 import { IconPicker } from "./icon-picker";
 import { ImageUpload } from "./image-upload";
 import { ImageIcon, Smile, X } from "lucide-react";
@@ -12,7 +11,12 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import TextareaAutosize from "react-textarea-autosize";
 
 interface ToolbarProps {
-    initialData: any;
+    initialData: {
+        id: string;
+        title: string;
+        icon?: string | null;
+        coverImage?: string | null;
+    };
     preview?: boolean;
 }
 
@@ -20,13 +24,11 @@ export const Toolbar = ({ initialData, preview = false }: ToolbarProps) => {
 
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [value, setValue] = useState(initialData.coverImage);
+    const [value, setValue] = useState(initialData.title || "");
     const { updateDocument } = useUpdateDocument({
         id: initialData.id,
-        title: value,
+        title: value || undefined,
     });
-
-    const coverImage = useCoverImage();
 
     useEffect(() => {
         setValue(initialData.title);

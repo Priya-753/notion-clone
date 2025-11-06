@@ -1,11 +1,13 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { z } from "zod";
 import prisma from "@/lib/database";
+import fs from "fs";
+import path from "path";
 
 export const documentRouter = createTRPCRouter({
     // Get all documents for a user (optionally filtered by parent)
     getMany: protectedProcedure
-        .query(async ({ input, ctx }) => {
+        .query(async ({ ctx }) => {
             const documents = await prisma.document.findMany({
                 where: {
                     userId: ctx.auth.userId,
@@ -87,8 +89,6 @@ export const documentRouter = createTRPCRouter({
                             const oldUrl = currentDocument.coverImage;
                             if (oldUrl.includes('/uploads/')) {
                                 const filename = oldUrl.split('/uploads/')[1];
-                                const fs = require('fs');
-                                const path = require('path');
                                 const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
                                 
                                 if (fs.existsSync(filePath)) {
@@ -202,8 +202,6 @@ export const documentRouter = createTRPCRouter({
                 try {
                     if (document.coverImage.includes('/uploads/')) {
                         const filename = document.coverImage.split('/uploads/')[1];
-                        const fs = require('fs');
-                        const path = require('path');
                         const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
                         
                         if (fs.existsSync(filePath)) {
@@ -220,8 +218,6 @@ export const documentRouter = createTRPCRouter({
                 try {
                     if (image.url.includes('/uploads/')) {
                         const filename = image.url.split('/uploads/')[1];
-                        const fs = require('fs');
-                        const path = require('path');
                         const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
                         
                         if (fs.existsSync(filePath)) {
@@ -466,8 +462,6 @@ export const documentRouter = createTRPCRouter({
             try {
                 if (image.url.includes('/uploads/')) {
                     const filename = image.url.split('/uploads/')[1];
-                    const fs = require('fs');
-                    const path = require('path');
                     const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
                     
                     if (fs.existsSync(filePath)) {

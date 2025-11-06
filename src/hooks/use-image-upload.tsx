@@ -94,15 +94,13 @@ export function useImageUpload() {
     });
   };
 
-  const getDocumentImages = () => {
-    if (!documentId) return null;
-    
-    return useQuery({
-      ...trpc.document.getImages.queryOptions({
-        documentId,
-      }),
-    });
-  };
+  // Use useQuery directly in the hook (at top level)
+  const documentImagesQuery = useQuery({
+    ...trpc.document.getImages.queryOptions({
+      documentId,
+    }),
+    enabled: !!documentId, // Only run query if documentId exists
+  });
 
   const deleteImage = async (imageId: string) => {
     return deleteImageMutation.mutate({
@@ -125,7 +123,7 @@ export function useImageUpload() {
   return {
     uploadImage,
     addImageToDocument,
-    getDocumentImages,
+    getDocumentImages: () => documentImagesQuery, // Return query result for compatibility
     deleteImage,
     updateImage,
     isUploading,

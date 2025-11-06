@@ -20,7 +20,7 @@ export const SearchCommand = () => {
     const { user } = useClerk();
     const trpc = useTRPC();
     const router = useRouter();
-    const { isOpen, onOpen, onClose, toggle } = useSearch();
+    const { isOpen, onClose } = useSearch();
     const [isMounted, setIsMounted] = useState(false);
     const [search, setSearch] = useState("");
 

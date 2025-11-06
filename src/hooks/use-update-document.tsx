@@ -9,8 +9,8 @@ interface UpdateDocumentOptions {
     coverImage?: string;
     icon?: string;
     isPublished?: boolean;
-    onSuccess?: (data: any) => void;
-    onError?: (error: any) => void;
+    onSuccess?: (data: { id: string; title: string; parentDocument: string | null; userId: string; content: string | null; coverImage: string | null; icon: string | null; isPublished: boolean; isArchived: boolean; createdAt: Date; updatedAt: Date }) => void;
+    onError?: (error: unknown) => void;
 }
 
 export const useUpdateDocument = (options: UpdateDocumentOptions = {} as UpdateDocumentOptions) => {

@@ -3,7 +3,7 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { SignOutButton, useUser } from "@clerk/nextjs";
-import { ChevronsDownUpIcon, LogOutIcon } from "lucide-react";
+import { ChevronsDownUpIcon } from "lucide-react";
 
 export const UserItem = () => {
     const { user } = useUser();

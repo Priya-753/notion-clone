@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 interface CreateDocumentOptions {
     title?: string;
@@ -11,14 +10,13 @@ interface CreateDocumentOptions {
     icon?: string;
     isPublished?: boolean;
     isArchived?: boolean;
-    onSuccess?: (data: any) => void;
-    onError?: (error: any) => void;
+    onSuccess?: (data: { id: string; title: string; parentDocument: string | null; userId: string; content: string | null; coverImage: string | null; icon: string | null; isPublished: boolean; isArchived: boolean; createdAt: Date; updatedAt: Date }) => void;
+    onError?: (error: unknown) => void;
     redirectToDocument?: boolean;
 }
 
 export const useCreateDocument = (options: CreateDocumentOptions = {}) => {
     const trpc = useTRPC();
-    const router = useRouter();
     const queryClient = useQueryClient();
 
     const {

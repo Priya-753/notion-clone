@@ -45,6 +45,30 @@ export const InlineImage = ({
     onImageRemove?.();
   };
 
+  // Handler for ImageUpload component - uploads file to server
+  const handleImageUpload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Upload failed");
+    }
+
+    const result = await response.json();
+    return result.url;
+  };
+
+  // Handler for ImageUpload component - calls onImageSelect with the URL
+  const handleImageInsert = (url: string, alt?: string, caption?: string) => {
+    handleImageSelect(url);
+  };
+
   if (src) {
     return (
       <div
@@ -60,11 +84,8 @@ export const InlineImage = ({
           src={src}
           alt={alt}
           className="w-full"
-          objectFit="cover"
           editable={editable}
           onRemove={handleImageRemove}
-          showFullscreen={true}
-          showDownload={true}
         />
       </div>
     );
@@ -74,11 +95,9 @@ export const InlineImage = ({
     return (
       <div className={cn("inline-block", sizeClasses[size], className)}>
         <ImageUpload
-          onImageSelect={handleImageSelect}
-          placeholder={placeholder}
-          variant="compact"
+          onImageUpload={handleImageUpload}
+          onImageInsert={handleImageInsert}
           className="min-h-[120px]"
-          showPreview={false}
         />
       </div>
     );

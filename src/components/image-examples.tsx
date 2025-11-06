@@ -10,6 +10,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 export const ImageExamples = () => {
   const [uploadedImages, setUploadedImages] = useState<Record<string, string>>({});
 
+  // Mock upload function for examples - converts file to data URL
+  const handleImageUpload = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        resolve(result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageInsert = (key: string) => (url: string, alt?: string, caption?: string) => {
+    setUploadedImages(prev => ({ ...prev, [key]: url }));
+  };
+
   const handleImageSelect = (key: string) => (imageUrl: string) => {
     setUploadedImages(prev => ({ ...prev, [key]: imageUrl }));
   };
@@ -34,10 +51,8 @@ export const ImageExamples = () => {
         </CardHeader>
         <CardContent>
           <ImageUpload
-            onImageSelect={handleImageSelect("default")}
-            onImageRemove={handleImageRemove("default")}
-            currentImage={uploadedImages.default}
-            placeholder="Upload an image with drag & drop"
+            onImageUpload={handleImageUpload}
+            onImageInsert={handleImageInsert("default")}
             className="max-w-md"
           />
         </CardContent>
@@ -51,11 +66,8 @@ export const ImageExamples = () => {
         </CardHeader>
         <CardContent>
           <ImageUpload
-            onImageSelect={handleImageSelect("compact")}
-            onImageRemove={handleImageRemove("compact")}
-            currentImage={uploadedImages.compact}
-            variant="compact"
-            placeholder="Compact upload"
+            onImageUpload={handleImageUpload}
+            onImageInsert={handleImageInsert("compact")}
             className="max-w-sm"
           />
         </CardContent>
@@ -69,10 +81,8 @@ export const ImageExamples = () => {
         </CardHeader>
         <CardContent>
           <ImageUpload
-            onImageSelect={handleImageSelect("minimal")}
-            onImageRemove={handleImageRemove("minimal")}
-            currentImage={uploadedImages.minimal}
-            variant="minimal"
+            onImageUpload={handleImageUpload}
+            onImageInsert={handleImageInsert("minimal")}
             className="max-w-xs"
           />
         </CardContent>

@@ -1,11 +1,12 @@
 import { create } from "zustand";
+import type { Editor } from "@tiptap/react";
 
 type InlineImageStore = {
     isOpen: boolean;
-    editor: any | null;
+    editor: Editor | null;
     existingImageUrl?: string;
     onDeleteOld?: () => void;
-    onOpen: (editor: any, existingImageUrl?: string, onDeleteOld?: () => void) => void;
+    onOpen: (editor: Editor, existingImageUrl?: string, onDeleteOld?: () => void) => void;
     onClose: () => void;
 }
 
@@ -14,7 +15,7 @@ export const useInlineImage = create<InlineImageStore>((set) => ({
     editor: null,
     existingImageUrl: undefined,
     onDeleteOld: undefined,
-    onOpen: (editor: any, existingImageUrl?: string, onDeleteOld?: () => void) => 
+    onOpen: (editor: Editor, existingImageUrl?: string, onDeleteOld?: () => void) => 
         set({ isOpen: true, editor, existingImageUrl, onDeleteOld }),
     onClose: () => set({ isOpen: false, editor: null, existingImageUrl: undefined, onDeleteOld: undefined }),
 }));

@@ -146,7 +146,7 @@ export const emojiSuggestion: Omit<SuggestionOptions, 'editor'> = {
           return true
         }
 
-        return component.ref?.onKeyDown(props)
+        return (component.ref as EmojiListRef | null)?.onKeyDown(props) ?? false
       },
 
       onExit() {

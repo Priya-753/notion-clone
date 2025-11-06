@@ -10,7 +10,6 @@ import { UserButton } from "@clerk/nextjs";
 import { ModeToggle } from "@/components/mode-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { Logo } from "./logo";
 
 export const Navbar = () => {
     const scrolled = useScrollTop();
